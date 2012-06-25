@@ -48,12 +48,28 @@
   ;; Empty string is valid (10 dashes)
   (5am:is-true (surrounded-by-5-dashes-p "----------")))
 
+(defun string-trim-whitespace (str)
+  (declare (type string str))
+  (string-trim '(#\Space #\Tab) str))
+
+(5am:test string-trim-whitespace
+  (5am:is (string= "foo" (string-trim-whitespace "  foo  ")))
+  (5am:is (string= "" (string-trim-whitespace "")))
+  (5am:is (string= "" (string-trim-whitespace "   "))))
+
 (defun decode-armor-header-line (armor-header-line)
+  "Extract armor header line text from a header line"
   (declare (type string armor-header-line))
   (unless (surrounded-by-5-dashes-p armor-header-line)
     (error "Header line corrupt"))
-  ;; ...
-  )
+  (let ((len (length armor-header-line)))
+    (string-trim-whitespace (subseq armor-header-line 5 (- len 5)))))
+
+(5am:test decode-armor-header-line
+  (5am:is (string= "BEGIN PGP MESSAGE"
+                   (decode-armor-header-line
+                    "----- BEGIN PGP MESSAGE  -----")))
+  (5am:signals error (decode-armor-header-line "corrupt header line")))
 
 (defgeneric decode-armor (encoded))
 
