@@ -103,12 +103,20 @@
 (defun split-first-empty-line (raw)
   (split-string raw (concatenate 'string *crlf* *crlf*) :count 2))
 
+(defun decode-armor-header (raw-header)
+  (apply #'cons
+         (mapcar #'string-trim-whitespace
+                 (split-sequence raw-header ":" :count 2))))
+
+(5am:test decode-armor-header
+  (5am:is (equalp '("foo" . "bar")
+                  (decode-armor-header "foo: bar")))
+  (5am:signals error (decode-armor-header "illegal")))
+
 (defun decode-armor-headers (raw-headers)
   "Decode raw armor headers into alist"
   (declare (type list raw-headers))
-  (when raw-headers
-    ; ...
-    '()))
+  (mapcar #'decode-armor-header raw-headers))
 
 (defun decode-armor-header-block (raw-header)
   "Decode top segment of armor message into header line and headers"
