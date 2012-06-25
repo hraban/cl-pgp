@@ -110,8 +110,8 @@
     ; ...
     '()))
 
-(defun decode-armor-header (raw-header)
-  "Decode raw armor header into header line and headers"
+(defun decode-armor-header-block (raw-header)
+  "Decode top segment of armor message into header line and headers"
   (declare (type string raw-header))
   (destructuring-bind (header-line &rest headers) (split-crlf-lines raw-header)
     (cons (decode-armor-header-line header-line)
@@ -126,7 +126,8 @@
   - headers
   - data
   "
-  (destructuring-bind (header body) (split-first-empty-line ascii)
-    (destructuring-bind (header-line headers) (decode-armor-header header)
+  (destructuring-bind (header-block body-block) (split-first-empty-line ascii)
+    (destructuring-bind (header-line headers)
+        (decode-armor-header-block header-block)
       ; ...
       (list header-line headers NIL))))
