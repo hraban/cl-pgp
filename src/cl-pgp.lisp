@@ -71,6 +71,35 @@
                     "----- BEGIN PGP MESSAGE  -----")))
   (5am:signals error (decode-armor-header-line "corrupt header line")))
 
+(defparameter *crlf*
+  (the string (coerce #(#\Return #\Newline) 'string)))
+
+(defun split-sequence (raw delimiter &key (count 0) (start 0))
+  "Split a sequence by another sequence. Count indicates the maximum number of
+  subsequences in the resulting list."
+  (if (= count 1)
+      (list (subseq raw start))
+      (let ((idx (search delimiter raw :start2 start)))
+        (if idx
+            (cons (subseq raw start idx)
+                  (split-string raw
+                                delimiter
+                                :count (decf count)
+                                :start (+ idx (length delimiter))))
+            (list (subseq raw start))))))
+
+(5am:test split-sequence
+  (5am:is (equalp '("ab" "c d" " f " "")
+                  (split-sequence "ab--c d-- f --" "--")))
+  (5am:is (equalp '((1 2) (3 4 x y 5 x y 6))
+                  (split-sequence '(1 2 x y 3 4 x y 5 x y 6)
+                                  '(x y)
+                                  :count 2))))
+
+(defun split-crlf-lines (raw &rest argv &key &allow-other-keys)
+  (declare (type string raw))
+  (apply #'split-string raw *crlf* argv))
+
 (defgeneric decode-armor (encoded))
 
 (defmethod decode-armor ((ascii string))
