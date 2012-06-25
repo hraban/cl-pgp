@@ -103,11 +103,19 @@
 (defun split-first-empty-line (raw)
   (split-string raw (concatenate 'string *crlf* *crlf*) :count 2))
 
+(defun decode-armor-headers (raw-headers)
+  "Decode raw armor headers into alist"
+  (declare (type list raw-headers))
+  (when raw-headers
+    ; ...
+    '()))
+
 (defun decode-armor-header (raw-header)
   "Decode raw armor header into header line and headers"
   (declare (type string raw-header))
-  ; ...
-  (list "" '()))
+  (destructuring-bind (header-line &rest headers) (split-crlf-lines raw-header)
+    (cons (decode-armor-header-line header-line)
+          (decode-armor-headers headers))))
 
 (defgeneric decode-armor (encoded))
 
