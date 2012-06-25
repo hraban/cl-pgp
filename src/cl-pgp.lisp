@@ -1,5 +1,10 @@
 (in-package :cl-pgp)
 
+;; Unit tests
+
+(5am:def-suite cl-pgp)
+(5am:in-suite cl-pgp)
+
 (defparameter +tags+
   '((1 . public-session-key)
     (2 . signature)
@@ -22,3 +27,42 @@
     (61 . private-61)
     (62 . private-62)
     (63 . private-63)))
+
+(defun surrounded-by-5-dashes-p (str)
+  "Evaluates to T if a string is surrounded by exactly five dashes on each side.
+  Whitespace is NOT ignored."
+  (declare (type string str))
+  (let ((len (length str)))
+    (and (<= 10 len)
+         (string= (subseq str 0 5) "-----")
+         (string= (subseq str (- len 5) len) "-----"))))
+
+(5am:test surrounded-by-5-dashes-p
+  (5am:is-true (surrounded-by-5-dashes-p "----- foo -----"))
+  ;; Whitespace is not ignored
+  (5am:is-false (surrounded-by-5-dashes-p " ----- foo ----- "))
+  ;; Must be exactly five
+  (5am:is-false (surrounded-by-5-dashes-p "-- foo --"))
+  ;; Only one true dash character:
+  (5am:is-false (surrounded-by-5-dashes-p "_____ foo _____"))
+  ;; Empty string is valid (10 dashes)
+  (5am:is-true (surrounded-by-5-dashes-p "----------")))
+
+(defun decode-armor-header-line (armor-header-line)
+  (declare (type string armor-header-line))
+  (unless (surrounded-by-5-dashes-p armor-header-line)
+    (error "Header line corrupt"))
+  ;; ...
+  )
+
+(defgeneric decode-armor (encoded))
+
+(defmethod decode-armor ((ascii string))
+  "Decode ASCII armor encoded data. Returns a list with three elements:
+
+  - header-line
+  - headers
+  - data
+  "
+  ;; ...
+  )
