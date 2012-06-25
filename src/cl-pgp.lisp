@@ -137,7 +137,7 @@
   "Decode top segment of armor message into header line and headers"
   (declare (type string raw-header))
   (destructuring-bind (header-line &rest headers) (split-crlf-lines raw-header)
-    (cons (decode-armor-header-line header-line)
+    (list (decode-armor-header-line header-line)
           (decode-armor-headers headers))))
 
 (defgeneric decode-armor (encoded))
