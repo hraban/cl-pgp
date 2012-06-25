@@ -10,6 +10,7 @@
   :version "0.0.0"
   :serial T
   :pathname "src/"
-  :depends-on ()
+  :depends-on (#:fiveam)
   :components ((:file "package")
+               (:file "utils")
                (:file "cl-pgp")))
