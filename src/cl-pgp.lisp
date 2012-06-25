@@ -5,7 +5,7 @@
 (5am:def-suite cl-pgp)
 (5am:in-suite cl-pgp)
 
-(defparameter +tags+
+(defparameter *tags*
   '((1 . public-session-key)
     (2 . signature)
     (3 . symmetric-session-key)
