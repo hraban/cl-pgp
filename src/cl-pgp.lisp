@@ -154,3 +154,14 @@
         (decode-armor-header-block header-block)
       ; ...
       (list header-line headers NIL))))
+
+(defun assocdr (&rest argv)
+  (cdr (apply #'assoc argv)))
+
+(5am:test decode-armor
+  (destructuring-bind (header-line headers body)
+      (decode-armor *sample-signature*)
+    (5am:is (string= "BEGIN PGP MESSAGE" header-line))
+    (5am:is (string= "OpenPrivacy 0.99" (assocdr "Version"
+                                                 headers
+                                                 :test #'string=)))))
