@@ -1,0 +1,9 @@
+.*.swp
+*~
+*.mem
+*.bin
+*.pyc
+*.pyo
+\#*#
+.#*
+*.fasl
