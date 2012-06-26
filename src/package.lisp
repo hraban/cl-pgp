@@ -3,6 +3,8 @@
   (:export )
   )
 
+(in-package :cl-pgp)
+
 ;; Unit tests
 
 (5am:def-suite cl-pgp)
