@@ -37,10 +37,10 @@
       (let ((idx (search delimiter raw :start2 start)))
         (if idx
             (cons (subseq raw start idx)
-                  (split-string raw
-                                delimiter
-                                :count (decf count)
-                                :start (+ idx (length delimiter))))
+                  (split-sequence raw
+                                  delimiter
+                                  :count (decf count)
+                                  :start (+ idx (length delimiter))))
             (list (subseq raw start))))))
 
 (5am:test split-sequence
