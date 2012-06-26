@@ -34,10 +34,10 @@
 
 (defun split-crlf-lines (raw &rest argv &key &allow-other-keys)
   (declare (type string raw))
-  (apply #'split-string raw *crlf* argv))
+  (apply #'split-sequence raw *crlf* argv))
 
 (defun split-first-empty-line (raw)
-  (split-string raw (concatenate 'string *crlf* *crlf*) :count 2))
+  (split-sequence raw (concatenate 'string *crlf* *crlf*) :count 2))
 
 (defun decode-armor-header (raw-header)
   (apply #'cons
