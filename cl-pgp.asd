@@ -15,4 +15,5 @@
   :depends-on (#:fiveam)
   :components ((:file "package")
                (:file "utils")
+               (:file "armor")
                (:file "cl-pgp")))
