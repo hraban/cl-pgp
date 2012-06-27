@@ -61,6 +61,26 @@
     (list (decode-armor-header-line header-line)
           (decode-armor-headers headers))))
 
+(defun armor-checksum-p (raw-body idx)
+  "Decide whether the checksum for the armor body starts at this index"
+  (declare (type string raw-body)
+           (type integer idx))
+  (when (< 0 idx (1- (length raw-body)))
+    (let ((x (char raw-body (1- idx)))
+          (y (char raw-body idx))
+          (z (char raw-body (1+ idx))))
+      (and (newlinep x)
+           (char= #\= y)
+           (not (newlinep z))
+           (not (char= #\= z))))))
+
+(5am:test armor-checksum-p
+  (let ((raw (format NIL "base64text~C==~C=abCD" #\Linefeed #\Linefeed)))
+    (dotimes (i (length raw))
+      (if (= i 14) ; Only the last =, at -4, is the checksum start.
+          (5am:is-true (armor-checksum-p raw i))
+          (5am:is-false (armor-checksum-p raw i))))))
+
 (defgeneric decode-armor (encoded))
 
 (defmethod decode-armor ((ascii string))
