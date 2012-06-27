@@ -53,3 +53,7 @@
 
 (defun assocdr (&rest argv)
   (cdr (apply #'assoc argv)))
+
+(defun newlinep (c)
+  (declare (type character c))
+  (or (char= c #\Linefeed) (char= c #\Return)))
