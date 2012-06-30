@@ -53,6 +53,11 @@
 (defun split-first-empty-line (raw)
   (split-sequence raw (concatenate 'string *crlf* *crlf*) :count 2))
 
+(5am:test split-first-empty-line
+  (let ((test-string (coerce #(#\a #\Return #\Newline #\Return #\Newline #\b)
+                             'string)))
+    (5am:is (equalp '("a" "b") (split-first-empty-line test-string)))))
+
 (defun decode-armor-header (raw-header)
   (apply #'cons
          (mapcar #'string-trim-whitespace
