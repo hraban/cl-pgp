@@ -55,34 +55,15 @@ bar") "baz") (split-first-empty-line test-string)))))
   (mapcar #'decode-armor-header
           (remove-if #'string-empty-p (split-lines raw-header))))
 
-(defun armor-checksum-p (raw-body idx)
-  "Decide whether the checksum for the armor body starts at this index"
-  (declare (type string raw-body)
-           (type integer idx))
-  (when (< 0 idx (1- (length raw-body)))
-    (let ((x (char raw-body (1- idx)))
-          (y (char raw-body idx))
-          (z (char raw-body (1+ idx))))
-      (and (newlinep x)
-           (char= #\= y)
-           (not (newlinep z))
-           (not (char= #\= z))))))
-
-(5am:test armor-checksum-p
-  (let ((raw (dos2unix (format NIL "base64text~%==~%=abCD"))))
-    (dotimes (i (length raw))
-      (if (= i 14) ; Only the last =, at -4, is the checksum start.
-          (5am:is-true (armor-checksum-p raw i))
-          (5am:is-false (armor-checksum-p raw i))))))
-
 (defun decode-armor-body-block (raw-body)
   (declare (type string raw-body))
-  (destructuring-bind (body64 &optional tail)
-      (split-sequence:split-sequence-if #'armor-checksum-p raw-body)
-    (unless tail
-      (error "No checksum found"))
+  (let* ((cksum-start (- (length raw-body) 5))
+         (data64-end (1- cksum-start))
+         (cksum (subseq raw-body cksum-start))
+         (data64 (subseq raw-body 0 data64-end))
+         (data (cl-base64:base64-string-to-usb8-array data64)))
     ; ...
-    body64))
+    data))
 
 (defun strip-envelope (armor)
   (declare (type string armor))
