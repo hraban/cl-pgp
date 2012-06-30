@@ -69,7 +69,7 @@ bar") "baz") (split-first-empty-line test-string)))))
            (not (char= #\= z))))))
 
 (5am:test armor-checksum-p
-  (let ((raw (format NIL "base64text~C==~C=abCD" #\Linefeed #\Linefeed)))
+  (let ((raw (dos2unix (format NIL "base64text~%==~%=abCD"))))
     (dotimes (i (length raw))
       (if (= i 14) ; Only the last =, at -4, is the checksum start.
           (5am:is-true (armor-checksum-p raw i))
