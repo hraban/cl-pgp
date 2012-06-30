@@ -1,5 +1,8 @@
 (in-package :cl-pgp)
 
+(defmacro force-string (x)
+  `(coerce ,x 'string))
+
 (defun surrounded-by-5-dashes-p (str)
   "Evaluates to T if a string is surrounded by exactly five dashes on each side.
   Whitespace is NOT ignored."
