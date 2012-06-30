@@ -80,17 +80,26 @@
 (defparameter *crlf*
   (the string (coerce #(#\Return #\Newline) 'string)))
 
+(defun string-join (strings &optional (delim ""))
+  "Join a sequence of strings into one string"
+  (declare (type list strings))
+  (let ((fmt (format NIL "~~{~~a~~^~a~~}" delim)))
+    (format NIL fmt strings)))
+
+(5am:test string-join
+  (5am:is (string= "a b c" (string-join '("a" "b" "c") " ")))
+  (5am:is (string= "foo" (string-join '("f" "o" "o"))))
+  (5am:is (string= "" (string-join '()))))
+
 (defun unix2dos (s)
   "Replace all occurences of #\Linefeed by #\Return #\Linefeed"
   (declare (type string s))
-  (let ((fmt (format NIL "~~{~~a~~^~a~~}" *crlf*)))
-    (format NIL fmt (split-sequence:split-sequence #\Linefeed s))))
+  (string-join (split-sequence:split-sequence #\Linefeed s) *crlf*))
 
 (defun dos2unix (s)
   "Replace all occurences of #\Linefeed by #\Return #\Linefeed"
   (declare (type string s))
-  (let ((fmt (format NIL "~~{~~a~~^~a~~}" #\Linefeed)))
-    (format NIL fmt (split-sequence s *crlf*))))
+  (string-join (split-sequence s *crlf*) #\Linefeed))
 
 (5am:test line-endings
   (let ((unix (force-string #(#\A #\Linefeed #\b)))
