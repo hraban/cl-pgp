@@ -22,7 +22,7 @@
 
 (defun string-trim-whitespace (str)
   (declare (type string str))
-  (string-trim '(#\Space #\Tab) str))
+  (string-trim '(#\Space #\Tab #\Linefeed #\Return) str))
 
 (5am:test string-trim-whitespace
   (5am:is (string= "foo" (string-trim-whitespace "  foo  ")))
