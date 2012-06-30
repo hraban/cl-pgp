@@ -55,14 +55,28 @@ bar") "baz") (split-first-empty-line test-string)))))
   (mapcar #'decode-armor-header
           (remove-if #'string-empty-p (split-lines raw-header))))
 
+(defun cksum-valid-p (data cksum)
+  (declare (type (vector (unsigned-byte 8)) data cksum))
+  (equalp cksum
+          (ironclad:digest-sequence :crc24 data)))
+
+(5am:test cksum-valid-p
+  (let ((data1 (coerce #(1 2 3 4) '(vector (unsigned-byte 8))))
+        (data2 (coerce #(6 6 6 6) '(vector (unsigned-byte 8))))
+        (cksum1 (coerce #(120 120 205) '(vector (unsigned-byte 8)))))
+    (5am:is-true (cksum-valid-p data1 cksum1))
+    (5am:is-false (cksum-valid-p data2 cksum1))))
+
 (defun decode-armor-body-block (raw-body)
   (declare (type string raw-body))
   (let* ((cksum-start (- (length raw-body) 5))
-         (data64-end (1- cksum-start))
-         (cksum (subseq raw-body cksum-start))
-         (data64 (subseq raw-body 0 data64-end))
-         (data (cl-base64:base64-string-to-usb8-array data64)))
-    ; ...
+         (data-end (1- cksum-start))
+         (cksum (cl-base64:base64-string-to-usb8-array
+                 (subseq raw-body cksum-start)))
+         (data (cl-base64:base64-string-to-usb8-array
+                (subseq raw-body 0 data-end))))
+    (unless (cksum-valid-p data cksum)
+      (error "Invalid armor checksum"))
     data))
 
 (defun strip-envelope (armor)

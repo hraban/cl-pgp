@@ -14,6 +14,7 @@
   :pathname "src/"
   :depends-on (#:cl-base64
                #:fiveam
+               #:ironclad
                #:split-sequence)
   :components ((:file "package")
                (:file "utils")
