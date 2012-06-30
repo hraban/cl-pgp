@@ -29,23 +29,6 @@
      #\- #\Return #\Newline)
    'string))
 
-(defun decode-armor-header-line (armor-header-line)
-  "Extract armor header line text from a header line"
-  (declare (type string armor-header-line))
-  (unless (surrounded-by-5-dashes-p armor-header-line)
-    (error "Header line corrupt"))
-  (let ((len (length armor-header-line)))
-    (string-trim-whitespace (subseq armor-header-line 5 (- len 5)))))
-
-(5am:test decode-armor-header-line
-  (5am:is (string= "BEGIN PGP MESSAGE"
-                   (decode-armor-header-line
-                    "----- BEGIN PGP MESSAGE  -----")))
-  (5am:signals error (decode-armor-header-line "corrupt header line")))
-
-(defparameter *crlf*
-  (the string (coerce #(#\Return #\Newline) 'string)))
-
 (defun split-crlf-lines (raw &rest argv &key &allow-other-keys)
   (declare (type string raw))
   (apply #'split-sequence raw *crlf* argv))
@@ -68,17 +51,11 @@
                   (decode-armor-header "foo: bar")))
   (5am:signals error (decode-armor-header "illegal")))
 
-(defun decode-armor-headers (raw-headers)
-  "Decode raw armor headers into alist"
-  (declare (type list raw-headers))
-  (mapcar #'decode-armor-header raw-headers))
-
 (defun decode-armor-header-block (raw-header)
   "Decode top segment of armor message into header line and headers"
   (declare (type string raw-header))
-  (destructuring-bind (header-line &rest headers) (split-crlf-lines raw-header)
-    (list (decode-armor-header-line header-line)
-          (decode-armor-headers headers))))
+  (mapcar #'decode-armor-header
+          (remove-if #'string-empty-p (split-crlf-lines raw-header))))
 
 (defun armor-checksum-p (raw-body idx)
   "Decide whether the checksum for the armor body starts at this index"
@@ -109,6 +86,20 @@
     ; ...
     body64))
 
+(defun strip-envelope (armor)
+  (declare (type string armor))
+  (let ((parts (remove-if #'string-empty-p
+                          (mapcar #'string-trim-whitespace
+                                  (split-sequence armor "-----")))))
+    (unless (= 3 (length parts))
+      (error "Malformed ASCII armor"))
+    (destructuring-bind (header-line mid tail-line) parts
+      (unless (and (string-starts-with-p header-line "BEGIN ")
+                   (string-starts-with-p tail-line "END ")
+                   (string= (subseq tail-line 4) (subseq header-line 6)))
+        (error "Malformed ASCII armor header or tail line"))
+      (values mid (subseq tail-line 4)))))
+
 (defgeneric decode-armor (encoded))
 
 (defmethod decode-armor ((ascii string))
@@ -116,18 +107,19 @@
 
   - header-line
   - headers
-  - data
+  - packet
   "
-  (destructuring-bind (header-block body-block) (split-first-empty-line ascii)
-    (destructuring-bind (header-line headers)
-        (decode-armor-header-block header-block)
-      ; ...
-      (list header-line headers NIL))))
+  (multiple-value-bind (mid header-line) (strip-envelope ascii)
+    (destructuring-bind (a &optional b) (split-first-empty-line mid)
+      (let ((head (and b a))
+            (body (or b a)))
+        (list header-line (when head (decode-armor-header-block head)) body)))))
 
 (5am:test decode-armor
   (destructuring-bind (header-line headers body)
       (decode-armor *sample-signature*)
-    (5am:is (string= "BEGIN PGP MESSAGE" header-line))
+    (declare (ignore body))
+    (5am:is (string= "PGP MESSAGE" header-line))
     (5am:is (string= "OpenPrivacy 0.99" (assocdr "Version"
                                                  headers
                                                  :test #'string=)))))
