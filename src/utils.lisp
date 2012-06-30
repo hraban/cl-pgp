@@ -73,3 +73,11 @@
   (5am:is-true (string-starts-with-p "foo" "foo"))
   (5am:is-true (string-starts-with-p "foo" ""))
   (5am:is-false (string-starts-with-p "foo" "foo bar")))
+
+(defparameter *crlf*
+  (the string (coerce #(#\Return #\Newline) 'string)))
+
+(defun unix2dos (s)
+  "Replace all occurences of #\Linefeed by #\Return #\Linefeed"
+  (declare (type string s))
+  (format NIL "~{~a^~a~}" (split-sequence s #\Linefeed) *crlf*))
