@@ -91,3 +91,9 @@
   (declare (type string s))
   (let ((fmt (format NIL "~~{~~a~~^~a~~}" #\Linefeed)))
     (format NIL fmt (split-sequence s *crlf*))))
+
+(5am:test line-endings
+  (let ((unix (force-string #(#\A #\Linefeed #\b)))
+        (dos (force-string #(#\A #\Return #\Linefeed #\b))))
+    (5am:is (string= dos (unix2dos unix)))
+    (5am:is (string= unix (dos2unix dos)))))
