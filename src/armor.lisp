@@ -100,6 +100,15 @@
           (5am:is-true (armor-checksum-p raw i))
           (5am:is-false (armor-checksum-p raw i))))))
 
+(defun decode-armor-body-block (raw-body)
+  (declare (type string raw-body))
+  (destructuring-bind (body64 &optional tail)
+      (split-sequence:split-sequence-if #'armor-checksum-p raw-body)
+    (unless tail
+      (error "No checksum found"))
+    ; ...
+    body64))
+
 (defgeneric decode-armor (encoded))
 
 (defmethod decode-armor ((ascii string))

@@ -12,7 +12,8 @@
   :licence "LLGPL"
   :serial T
   :pathname "src/"
-  :depends-on (#:fiveam)
+  :depends-on (#:fiveam
+               #:split-sequence)
   :components ((:file "package")
                (:file "utils")
                (:file "armor")
