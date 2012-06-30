@@ -61,3 +61,15 @@
 (defun string-empty-p (s)
   (declare (type string s))
   (string= s ""))
+
+(defun string-starts-with-p (whole start)
+  (declare (type string whole start))
+  (let ((init-len (length start)))
+    (when (>= (length whole) init-len)
+      (string= (subseq whole 0 init-len) start))))
+
+(5am:test string-starts-with-p
+  (5am:is-true (string-starts-with-p "foo bar" "foo"))
+  (5am:is-true (string-starts-with-p "foo" "foo"))
+  (5am:is-true (string-starts-with-p "foo" ""))
+  (5am:is-false (string-starts-with-p "foo" "foo bar")))
