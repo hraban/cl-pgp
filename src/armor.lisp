@@ -15,31 +15,29 @@
 (in-package :cl-pgp)
 
 (defparameter *sample-signature*
-  (coerce
-   #(#\- #\- #\- #\- #\- #\B #\E #\G #\I #\N #\  #\P #\G #\P #\  #\M #\E #\S #\S
-     #\A #\G #\E #\- #\- #\- #\- #\- #\Return #\Newline #\V #\e #\r #\s #\i #\o
-     #\n #\: #\  #\O #\p #\e #\n #\P #\r #\i #\v #\a #\c #\y #\  #\0 #\. #\9 #\9
-     #\Return #\Newline #\Return #\Newline #\y #\D #\g #\B #\O #\2 #\2 #\W #\x #\B
-     #\H #\v #\7 #\O #\8 #\X #\7 #\O #\/ #\j #\y #\g #\A #\E #\z #\o #\l #\5 #\6
-     #\i #\U #\K #\i #\X #\m #\V #\+ #\X #\m #\p #\C #\t #\m #\p #\q #\Q #\U #\K
-     #\i #\Q #\r #\F #\q #\c #\l #\F #\q #\U #\D #\B #\o #\v #\z #\S #\Return
-     #\Newline #\v #\B #\S #\F #\j #\N #\S #\i #\V #\H #\s #\u #\A #\A #\= #\=
-     #\Return #\Newline #\= #\n #\j #\U #\N #\Return #\Newline #\- #\- #\- #\- #\-
-     #\E #\N #\D #\  #\P #\G #\P #\  #\M #\E #\S #\S #\A #\G #\E #\- #\- #\- #\-
-     #\- #\Return #\Newline)
-   'string))
+  (dos2unix "-----BEGIN PGP MESSAGE-----
+Version: OpenPrivacy 0.99
 
-(defun split-crlf-lines (raw &rest argv &key &allow-other-keys)
+yDgBO22WxBHv7O8X7O/jygAEzol56iUKiXmV+XmpCtmpqQUKiQrFqclFqUDBovzS
+vBSFjNSiVHsuAA==
+=njUN
+-----END PGP MESSAGE-----
+"))
+
+(defun split-lines (raw &rest argv &key &allow-other-keys)
   (declare (type string raw))
-  (apply #'split-sequence raw *crlf* argv))
+  (apply #'split-sequence:split-sequence #\Linefeed raw argv))
 
 (defun split-first-empty-line (raw)
-  (split-sequence raw (concatenate 'string *crlf* *crlf*) :count 2))
+  (split-sequence raw (format NIL "~a~:*~a" #\Linefeed) :count 2))
 
 (5am:test split-first-empty-line
-  (let ((test-string (coerce #(#\a #\Return #\Newline #\Return #\Newline #\b)
-                             'string)))
-    (5am:is (equalp '("a" "b") (split-first-empty-line test-string)))))
+  (let ((test-string (dos2unix "foo:
+bar
+
+baz")))
+    (5am:is (equalp (list (dos2unix "foo:
+bar") "baz") (split-first-empty-line test-string)))))
 
 (defun decode-armor-header (raw-header)
   (apply #'cons
@@ -55,7 +53,7 @@
   "Decode top segment of armor message into header line and headers"
   (declare (type string raw-header))
   (mapcar #'decode-armor-header
-          (remove-if #'string-empty-p (split-crlf-lines raw-header))))
+          (remove-if #'string-empty-p (split-lines raw-header))))
 
 (defun armor-checksum-p (raw-body idx)
   "Decide whether the checksum for the armor body starts at this index"
