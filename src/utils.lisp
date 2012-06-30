@@ -85,3 +85,9 @@
   (declare (type string s))
   (let ((fmt (format NIL "~~{~~a~~^~a~~}" *crlf*)))
     (format NIL fmt (split-sequence:split-sequence #\Linefeed s))))
+
+(defun dos2unix (s)
+  "Replace all occurences of #\Linefeed by #\Return #\Linefeed"
+  (declare (type string s))
+  (let ((fmt (format NIL "~~{~~a~~^~a~~}" #\Linefeed)))
+    (format NIL fmt (split-sequence s *crlf*))))
