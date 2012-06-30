@@ -1,3 +1,17 @@
+;;;; This file holds ASCII Armor related functionality (RFC 4880, section 6.2).
+;;;; The armor is a US-ASCII (i.e. lowest 7 bits) encoding of OpenPGP data,
+;;;; which is raw binary.
+;;;;
+;;;; Terminology throughout this file:
+;;;;
+;;;; Armor: the entire, encoded, payload
+;;;; Header: a key-value combination, both text
+;;;; Head: the encoded block of armor headers
+;;;; Body: the encoded data
+;;;; Envelope: the ----- lines at the start and end of the armor
+;;;; Header line: the text between the envelope dashes
+;;;;
+
 (in-package :cl-pgp)
 
 (defparameter *sample-signature*
