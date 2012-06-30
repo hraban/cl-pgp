@@ -111,7 +111,9 @@ bar") "baz") (split-first-empty-line test-string)))))
     (destructuring-bind (a &optional b) (split-first-empty-line mid)
       (let ((head (and b a))
             (body (or b a)))
-        (list header-line (when head (decode-armor-header-block head)) body)))))
+        (list header-line
+              (when head (decode-armor-header-block head))
+              (decode-armor-body-block body))))))
 
 (5am:test decode-armor
   (destructuring-bind (header-line headers body)
