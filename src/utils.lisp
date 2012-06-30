@@ -57,3 +57,7 @@
 (defun newlinep (c)
   (declare (type character c))
   (or (char= c #\Linefeed) (char= c #\Return)))
+
+(defun string-empty-p (s)
+  (declare (type string s))
+  (string= s ""))
