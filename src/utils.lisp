@@ -80,4 +80,5 @@
 (defun unix2dos (s)
   "Replace all occurences of #\Linefeed by #\Return #\Linefeed"
   (declare (type string s))
-  (format NIL "~{~a^~a~}" (split-sequence s #\Linefeed) *crlf*))
+  (let ((fmt (format NIL "~~{~~a~~^~a~~}" *crlf*)))
+    (format NIL fmt (split-sequence:split-sequence #\Linefeed s))))
