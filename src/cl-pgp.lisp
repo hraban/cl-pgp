@@ -22,3 +22,36 @@
     (61 . private-61)
     (62 . private-62)
     (63 . private-63)))
+
+(defun packet-length-2-octet (data)
+  "Compute the length following the two-octet length style"
+  (declare (type (vector (unsigned-byte 8)) data))
+  (let ((b1 (aref data 1))
+        (b2 (aref data 2)))
+    (+ (ash (- b1 192) 8) b2 192)))
+
+(defun packet-length-4-octet (data)
+  (declare (type (vector (unsigned-byte 8)) data))
+  (+ (ash (aref data 2) 24)
+     (ash (aref data 3) 16)
+     (ash (aref data 4) 8)
+     (aref data 5)))
+
+(defun packet-length (data)
+  (declare (type (vector (unsigned-byte 8)) data))
+  (let ((b1 (aref data 1)))
+    (cond ((< b1 192) (values b1 1))
+          ((< 191 b1 224) (values (packet-length-2-octet data) 2))
+          ((= 255 b1) (values (packet-length-4-octet data) 5))
+          (T (error "Partial packet length unsupported")))))
+
+(defun decode-packet (data)
+  (declare (type (vector (unsigned-byte 8)) data))
+  (let* ((b0 (aref data 0))
+         (version (logand #xC0 b0))
+         (tagid (logand #x3F b0)))
+    (unless (= version #xC0)
+      (error "Only version 2 packets are supported"))
+    (multiple-value-bind (len n) (packet-length data)
+      ; ...
+      (list tagid len data))))
