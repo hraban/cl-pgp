@@ -69,7 +69,7 @@ bar") "baz") (split-first-empty-line test-string)))))
 
 (defun decode-armor-body-block (raw-body)
   (declare (type string raw-body))
-  (let* ((cksum-start (- (length raw-body) 5))
+  (let* ((cksum-start (- (length raw-body) 4))
          (data-end (1- cksum-start))
          (cksum (cl-base64:base64-string-to-usb8-array
                  (subseq raw-body cksum-start)))
