@@ -23,35 +23,64 @@
     (62 . private-62)
     (63 . private-63)))
 
-(defun packet-length-2-octet (data)
+(defun packet-length-v2-2-octet (data)
   "Compute the length following the two-octet length style"
   (declare (type (vector (unsigned-byte 8)) data))
   (let ((b1 (aref data 1))
         (b2 (aref data 2)))
     (+ (ash (- b1 192) 8) b2 192)))
 
-(defun packet-length-4-octet (data)
+(defun packet-length-v2-4-octet (data)
   (declare (type (vector (unsigned-byte 8)) data))
   (+ (ash (aref data 2) 24)
      (ash (aref data 3) 16)
      (ash (aref data 4) 8)
      (aref data 5)))
 
-(defun packet-length (data)
+(defun packet-length-v2 (data)
   (declare (type (vector (unsigned-byte 8)) data))
   (let ((b1 (aref data 1)))
-    (cond ((< b1 192) (values b1 1))
-          ((< 191 b1 224) (values (packet-length-2-octet data) 2))
-          ((= 255 b1) (values (packet-length-4-octet data) 5))
+    (cond ((< b1 192) (list b1 1))
+          ((< 191 b1 224) (list (packet-length-v2-2-octet data) 2))
+          ((= 255 b1) (list (packet-length-v2-4-octet data) 5))
           (T (error "Partial packet length unsupported")))))
+
+(defun decode-header-v1 (data)
+  (declare (type (vector (unsigned-byte 8)) data))
+  (let* ((b0 (aref data 0))
+         (tagid (ash (logand #x3C b0) -2)))
+    (ecase (logand #x03 b0)
+      (0 (list tagid (aref data 1) 2))
+      (1 (list tagid (ironclad:ub16ref/be data 1) 3))
+      (2 (list tagid (ironclad:ub32ref/be data 1) 5))
+      (3 (list tagid NIL 1)))))
+
+(defun decode-header-v2 (data)
+  (declare (type (vector (unsigned-byte 8)) data))
+  (destructuring-bind (size len-len) (packet-length-v2 data)
+    (list (logand #x3F (aref data 0)) size (1+ len-len))))
+
+(defun decode-header (data)
+  (declare (type (vector (unsigned-byte 8)) data))
+  (let ((b0 (aref data 0)))
+    (if (= 0 (logand #x80 b0))
+        (error "Wrongly formatted packet")
+        (if (= 0 (logand #x40 b0))
+            (decode-header-v1 data)
+            (decode-header-v2 data)))))
+
+(5am:test decode-header
+  (flet ((decode64 (x)
+           (decode-header (cl-base64:base64-string-to-usb8-array x))))
+    ;; Version 1, tag 8, length implicit, header size 1
+    (5am:is (equalp '(8 NIL 1) (decode64 "ow==")))
+    ;; Version 1, tag 2, length 284, header size 3
+    (5am:is (equalp '(2 284 3) (decode64 "iQEc")))
+    ;; Version 2, tag 2, length 277, header size 3
+    (5am:is (equalp '(2 277 3) (decode64 "wsBV")))))
 
 (defun decode-packet (data)
   (declare (type (vector (unsigned-byte 8)) data))
-  (let* ((b0 (aref data 0))
-         (version (logand #xC0 b0))
-         (tagid (logand #x3F b0)))
-    (unless (= version #xC0)
-      (error "Only version 2 packets are supported"))
-    (multiple-value-bind (len n) (packet-length data)
-      ; ...
-      (list tagid len data))))
+  (multiple-value-bind (tagid packet-size packet-start) (decode-header data)
+    ; ...
+    (list tagid packet-size packet-start data)))
